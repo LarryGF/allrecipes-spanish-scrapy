@@ -59,3 +59,12 @@ class AllrecipesmxSpider(scrapy.Spider):
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[4]/div[1]/ul/li/div/a/div/h3/text()').extract()]
 
         yield recipe
+
+        for link in response.xpath('//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[4]/div[1]/ul/li/div/a/@href'):
+            yield scrapy.Request(link, callback=self.parse_recipe)
+            print(link.extract())
+
+
+    def parse_recipe(self, response):
+        pass
+        
