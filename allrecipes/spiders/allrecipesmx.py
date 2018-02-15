@@ -51,4 +51,7 @@ class AllrecipesmxSpider(scrapy.Spider):
         recipe['categories'] = [e for i, e in enumerate(response.xpath(
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/ul/li/a/span/text()').extract()) if i > 1]
 
+        recipe['related_recipe'] = [e.strip() for e in response.xpath(
+            '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[4]/div[1]/ul/li/div/a/div/h3/text()').extract()]
+
         yield recipe
