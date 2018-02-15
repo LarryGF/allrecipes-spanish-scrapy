@@ -45,8 +45,12 @@ class AllrecipesmxSpider(scrapy.Spider):
         recipe['totaltime'] = ''.join(
             [s + ' ' for s in times.xpath('span[3]/span/text()').extract()]).strip()
 
-        recipe['image'] = response.xpath(
-            '//*[@id="currentMainPhotoContainer"]/span/img/@src').extract()[0][2:]
+        link = response.xpath(
+            '//*[@id="currentMainPhotoContainer"]/span/img/@src').extract()
+
+        image = link[0][2:] if link else None
+
+        recipe['image'] = image
 
         recipe['categories'] = [e for i, e in enumerate(response.xpath(
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/ul/li/a/span/text()').extract()) if i > 1]
