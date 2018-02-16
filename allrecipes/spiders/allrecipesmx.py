@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from scrapy.spiders import Rule
+from scrapy.linkextractors import LinkExtractor
 
 
 class AllrecipesmxSpider(scrapy.Spider):
@@ -9,15 +11,21 @@ class AllrecipesmxSpider(scrapy.Spider):
                   'http://allrecipes.com.ar/recetas/tipo-de-receta.aspx?o_is=Hub_Breadcrumb',
                   'http://allrecipes.com.mx/recetas/tipo-de-receta.aspx?o_is=RD_Breadcrumb'
                  ]
+    recipe = 'recetas?/[0-9]+'
+    listing = 'recetas?/[a-zA-Z]'
+
+    rules = (
+        Rule (LinkExtractor(allow=(listing,)), callback='parse_type'),
+        Rule(LinkExtractor(allow=(recipe,)), callback='parse_recipe')
+    )
+
 
     def parse(self, response):
         for type in response.xpath('//*[@id="hubsRelated"]/div[1]/div/h5/a/@href'):
             yield scrapy.Request(type.extract(), callback=self.parse_type)
+        pass
 
     def parse_type(self, response):
-        for recipe in response.xpath('//*[@id="hubsRelated"]/div[1]/div/h5/a/@href'):
-            yield scrapy.Request(recipe.extract(), callback=self.parse_recipe)
-
         for recipe in response.xpath('//*[@id="sectionTopRecipes"]/div/div/h3/a/@href'):
             yield scrapy.Request(recipe.extract(), callback=self.parse_recipe)
 
@@ -25,13 +33,7 @@ class AllrecipesmxSpider(scrapy.Spider):
     def parse_recipe(self, response):
         recipe = {}
 
-        # This is a way to now if is a recipe or a listing, i don't find
-        # better way
-        print(response.url)
-        is_recipe = response.xpath('//*[@id="btnIMadeIt4251"]').extract()
-        if is_recipe == []:
-            return self.parse_type(response)
-            
+        recipe['url'] = response.url
         recipe['name'] = response.xpath(
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[1]/div/div[2]/h1/span/text()').extract()[0].strip()
         recipe['description'] = response.xpath(
