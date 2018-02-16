@@ -1,4 +1,4 @@
-FROM python
+FROM python3
 
 RUN pip3 install scrapy
 
