@@ -7,5 +7,5 @@ This is an scrapy project for allrecepies.com.mx and allrecepies.com.ar
 For running exec:
 
 ```bash
-scrapy crawl allrecepiesmx --output=data.json
+$ scrapy crawl allrecepiesmx --output=data.json
 ```
