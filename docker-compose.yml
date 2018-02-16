@@ -1,0 +1,6 @@
+allrecipes:
+
+  build: .
+  command: scrapy crawl allrecipesmx --output=data/data.json
+  volumes:
+    - .:/code
