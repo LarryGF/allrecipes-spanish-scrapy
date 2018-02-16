@@ -4,14 +4,34 @@ import scrapy
 
 class AllrecipesmxSpider(scrapy.Spider):
     name = 'allrecipesmx'
-    allowed_domains = ['allrecipes.com.mx']
-    start_urls = ['file:///home/hian/Downloads/Empanadas de jamón y queso receta - Recetas de Allrecipes.html',
-    # 'http://allrecipes.com.mx/'
-    ]
+    allowed_domains = ['allrecipes.com.mx', 'allrecipes.com.ar']
+    start_urls = [
+                  'http://allrecipes.com.ar/recetas/tipo-de-receta.aspx?o_is=Hub_Breadcrumb',
+                  'http://allrecipes.com.mx/recetas/tipo-de-receta.aspx?o_is=RD_Breadcrumb'
+                 ]
 
     def parse(self, response):
+        for type in response.xpath('//*[@id="hubsRelated"]/div[1]/div/h5/a/@href'):
+            yield scrapy.Request(type.extract(), callback=self.parse_type)
+
+    def parse_type(self, response):
+        for recipe in response.xpath('//*[@id="hubsRelated"]/div[1]/div/h5/a/@href'):
+            yield scrapy.Request(recipe.extract(), callback=self.parse_recipe)
+
+        for recipe in response.xpath('//*[@id="sectionTopRecipes"]/div/div/h3/a/@href'):
+            yield scrapy.Request(recipe.extract(), callback=self.parse_recipe)
+
+
+    def parse_recipe(self, response):
         recipe = {}
 
+        # This is a way to now if is a recipe or a listing, i don't find
+        # better way
+        print(response.url)
+        is_recipe = response.xpath('//*[@id="btnIMadeIt4251"]').extract()
+        if is_recipe == []:
+            return self.parse_type(response)
+            
         recipe['name'] = response.xpath(
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[1]/div/div[2]/h1/span/text()').extract()[0].strip()
         recipe['description'] = response.xpath(
@@ -25,13 +45,13 @@ class AllrecipesmxSpider(scrapy.Spider):
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[2]/ul/li/span/@data-original')
 
         recipe['ingredients'] = [ingredient.extract()
-                                 for ingredient in ingredients]
+                                for ingredient in ingredients]
 
         instructions = response.xpath(
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[3]/ol/li/span/text()')
 
         recipe['instructions'] = [instruction.extract()
-                                  for instruction in instructions]
+                                for instruction in instructions]
 
         times = response.xpath(
             '//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[3]/h2/small')
@@ -61,10 +81,5 @@ class AllrecipesmxSpider(scrapy.Spider):
         yield recipe
 
         for link in response.xpath('//*[@id="pageContent"]/div[2]/div/div/div[1]/div/section[4]/div[1]/ul/li/div/a/@href'):
-            yield scrapy.Request(link, callback=self.parse_recipe)
-            print(link.extract())
+            yield scrapy.Request(link.extract(), callback=self.parse_recipe)
 
-
-    def parse_recipe(self, response):
-        pass
-        
